@@ -1,0 +1,17 @@
+# Netlify-Konfiguration für den Landjugend Festplaner
+# Netlify erkennt diese Datei automatisch im Projektstamm.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Single-Page-App: alle Pfade auf index.html umleiten
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
