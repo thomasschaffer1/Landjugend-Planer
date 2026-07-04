@@ -88,6 +88,7 @@ export default function App() {
   const [openNotes, setOpenNotes] = useState({});
   const [assignFor, setAssignFor] = useState(null);
   const [toast, setToast] = useState(null);
+  const [dbError, setDbError] = useState(null);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -96,14 +97,16 @@ export default function App() {
 
   /* ---- Laden ---- */
   const loadTasks = useCallback(async () => {
-    const { data } = await supabase.from("tasks").select("*").order("created_at");
-    if (data) setTasks(data);
+    const { data, error } = await supabase.from("tasks").select("*").order("created_at");
+    if (error) setDbError(error.message);
+    if (data) { setTasks(data); setDbError(null); }
   }, []);
   const loadShopping = useCallback(async () => {
     const [s, i] = await Promise.all([
       supabase.from("stores").select("*").order("created_at"),
       supabase.from("store_items").select("*").order("created_at"),
     ]);
+    if (s.error) setDbError(s.error.message);
     if (s.data) setStores(s.data);
     if (i.data) setItems(i.data);
   }, []);
@@ -247,6 +250,19 @@ export default function App() {
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
       `}</style>
       {inner}
+      {dbError && (
+        <div style={{
+          position: "fixed", top: 8, left: "50%", transform: "translateX(-50%)",
+          width: "calc(100% - 24px)", maxWidth: 456, zIndex: 70,
+          background: "#B3261E", color: "#fff", borderRadius: 12,
+          padding: "10px 14px", fontSize: 13, fontWeight: 700, lineHeight: 1.4,
+        }}>
+          ⚠️ Datenbank-Fehler: {dbError}
+          <div style={{ fontWeight: 600, opacity: .9, marginTop: 4 }}>
+            Meist fehlen die Zugriffsrechte – führe die Datei reparatur.sql im Supabase SQL-Editor aus.
+          </div>
+        </div>
+      )}
       {toast && (
         <div style={{
           position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
@@ -283,6 +299,7 @@ export default function App() {
       <header style={{
         background: `linear-gradient(135deg, ${C.greenDark}, ${C.green})`,
         padding: "18px 18px 14px", color: "#fff",
+        paddingTop: "calc(18px + env(safe-area-inset-top))",
         borderRadius: "0 0 24px 24px",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -387,7 +404,7 @@ export default function App() {
 function LoginScreen({ users, onLogin }) {
   const [name, setName] = useState("");
   return (
-    <div style={{ padding: "56px 24px 40px", textAlign: "center" }}>
+    <div style={{ padding: "56px 24px 40px", paddingTop: "calc(56px + env(safe-area-inset-top))", textAlign: "center" }}>
       <div style={{
         width: 84, height: 84, borderRadius: 28, margin: "0 auto 18px",
         background: `linear-gradient(135deg, ${C.green}, ${C.greenDark})`,
